@@ -21,7 +21,12 @@ func getAvailableResolutions(from url: URL, completion: @escaping (Result<[Resol
         }
         
         let resolutions = parseResolutions(from: content)
-        completion(.success(resolutions))
+        
+        if resolutions.isEmpty {
+            completion(.failure(NSError(domain: "ResolutionError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No available resolutions found"])))
+        } else {
+            completion(.success(resolutions))
+        }
     }.resume()
 }
 
@@ -46,16 +51,13 @@ private func parseResolutions(from content: String) -> [ResolutionOption] {
                             // Grab the next line (url) and append
                             if index + 1 < lines.count {
                                 let nextLine = lines[index + 1]
-                                if let playlistURL = URL(string: nextLine){
-                                    let resolutionOption = ResolutionOption(size: size, label: label, streamURL: playlistURL )
+                                if let playlistURL = URL(string: nextLine) {
+                                    let resolutionOption = ResolutionOption(size: size, label: label, streamURL: playlistURL)
                                     resolutions.append(resolutionOption)
                                 }
                             }
-                          
                         }
                     }
-
-                    
                 }
             }
         }
@@ -63,7 +65,6 @@ private func parseResolutions(from content: String) -> [ResolutionOption] {
     
     return resolutions.sorted { $0.size.width > $1.size.width }
 }
-
 
 private func getResolutionString(for height: Int) -> String {
     switch height {
