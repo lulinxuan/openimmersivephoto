@@ -1,6 +1,6 @@
 //
 //  PlaylistReader.swift
-//  spatialgen-whitelabel
+//  SpatialGen
 //
 //  Created by Zachary Handshoe on 8/28/24.
 //
@@ -69,16 +69,17 @@ private func getResolutionString(for height: Int) -> String {
     switch height {
     case 720: return "720p"
     case 1080: return "1080p"
-    case 2048, 2160: return "4K"
-    case 3072, 3240: return "6K"
-    case 3840, 4096, 4320: return "8K"
-    case 5120, 5400: return "10K"
-    case 6144, 6480: return "12K"
-    case 7168, 7560: return "14K"
-    case 8192, 8640: return "16K"
+    case 2048..<3072: return "4K"
+    case 3072..<3840: return "6K"
+    case 3840..<5120: return "8K"
+    case 5120..<6144: return "10K"
+    case 6144..<7168: return "12K"
+    case 7168..<8192: return "14K"
+    case 8192...: return "16K"
     default: return ""
     }
 }
+
 
 struct ResolutionOption: Identifiable, Hashable {
     let id = UUID()
