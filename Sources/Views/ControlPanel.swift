@@ -36,7 +36,7 @@ public struct ControlPanel: View {
                     .tint(.clear)
                     .frame(width: 100)
                     
-                    MediaInfo(videoPlayer: videoPlayer)
+                    MediaInfo(videoPlayer: $videoPlayer)
                 }
                 
                 HStack {
@@ -56,30 +56,54 @@ public struct ControlPanel: View {
 /// A simple horizontal view with a dark background presenting video title, description, and a bitrate readout.
 fileprivate struct MediaInfo: View {
     /// The singleton video player control interface.
-    var videoPlayer: VideoPlayer
+    @Binding var videoPlayer: VideoPlayer
     
     var body: some View {
         HStack {
-            Spacer()
-            VStack {
-                Text(videoPlayer.title.isEmpty ? "No Video Selected" : videoPlayer.title)
-                    .font(.title)
+            let hasResolutionOptions = videoPlayer.resolutionOptions.count > 1
+            let showingResolutionOptions = hasResolutionOptions && videoPlayer.shouldShowResolutionOptions
+            let showingBitrate = videoPlayer.bitrate > 0 && !showingResolutionOptions
+            
+            if !showingResolutionOptions {
+                // extra padding to keep the stack centered when the bitrate is visible
+                let extraPadding: () -> CGFloat = {
+                    var padding: CGFloat = 0
+                    if showingBitrate {
+                        padding += 120
+                    }
+                    if hasResolutionOptions {
+                        padding += 100
+                    }
+                    if showingBitrate && hasResolutionOptions {
+                        padding += 10
+                    }
+                    return padding
+                }
                 
-                Text(videoPlayer.details)
-                    .font(.headline)
-            }
-            // extra padding to keep the stack centered when the bitrate is visible
-            .padding(.leading, videoPlayer.bitrate > 0 ? 120 : 0)
-            Spacer()
+                Spacer()
+                VStack {
+                    Text(videoPlayer.title.isEmpty ? "No Video Selected" : videoPlayer.title)
+                        .font(.title)
+                    
+                    Text(videoPlayer.details)
+                        .font(.headline)
+                }
+                .padding(.leading, extraPadding())
+                Spacer()
 
-            if videoPlayer.bitrate > 0 {
-                Text("\(videoPlayer.bitrate/1_000_000, specifier: "%.1f") Mbps")
-                    .frame(width: 120)
-                    .monospacedDigit()
-                    .foregroundStyle(color(for: videoPlayer.bitrate).opacity(0.8))
+                if showingBitrate {
+                    Text("\(videoPlayer.bitrate/1_000_000, specifier: "%.1f") Mbps")
+                        .frame(width: 120)
+                        .monospacedDigit()
+                        .foregroundStyle(color(for: videoPlayer.bitrate).opacity(0.8))
+                }
+            }
+            
+            if hasResolutionOptions {
+                ResolutionSelector(videoPlayer: $videoPlayer)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, minHeight: 60, alignment: .center)
         .padding()
         .background(Color.black.opacity(0.5))
         .cornerRadius(20)
@@ -101,6 +125,36 @@ fileprivate struct MediaInfo: View {
         }
     }
 }
+
+fileprivate struct ResolutionSelector: View {
+    @Binding var videoPlayer: VideoPlayer
+    
+    var body: some View {
+        HStack {
+            if videoPlayer.shouldShowResolutionOptions {
+                Spacer()
+                
+                Button("Auto") {
+                    videoPlayer.openResolutionOption(index: -1)
+                }
+                
+                let options = videoPlayer.resolutionOptions
+                let zippedOptions = Array(zip(options.indices, options))
+                ForEach(zippedOptions, id: \.0) { index, option in
+                    Button(option.description) {
+                        videoPlayer.openResolutionOption(index: index)
+                    }
+                }
+            }
+            
+            Button("", systemImage: "gearshape.fill") {
+                videoPlayer.toggleResolutionOptions()
+            }
+            .frame(width: 100)
+        }
+    }
+}
+
 
 /// A simple horizontal view presenting the user with video playback control buttons.
 fileprivate struct PlaybackButtons: View {

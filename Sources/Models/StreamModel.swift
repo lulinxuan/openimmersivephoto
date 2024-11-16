@@ -13,7 +13,7 @@ public struct StreamModel: Codable {
     public var title: String
     /// A short description of the video stream.
     public var details: String
-    /// URL to a media, whether local or streamed from a server (m3u8).
+    /// URL to a media, whether local or streamed from a HLS server (m3u8).
     public var url: URL
     /// True if the media required user permission for access.
     public var isSecurityScoped: Bool

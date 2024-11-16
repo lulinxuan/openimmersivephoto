@@ -29,12 +29,20 @@ public class VideoPlayer: Sendable {
     private(set) var hasReachedEnd: Bool = false
     /// The bitrate of the current video stream (0 if none).
     private(set) var bitrate: Double = 0
+    /// Resolution options available for the video stream, only available if streaming from a HLS server (m3u8).
+    private(set) var resolutionOptions: [ResolutionOption] = []
     /// `true` if the control panel should be visible to the user.
     private(set) var shouldShowControlPanel: Bool = true {
         didSet {
             if shouldShowControlPanel {
                 restartControlPanelTask()
             }
+        }
+    }
+    /// `true` if the control panel should present resolution options to the user.
+    private(set) var shouldShowResolutionOptions: Bool = false {
+        didSet {
+            restartControlPanelTask()
         }
     }
     
@@ -81,6 +89,7 @@ public class VideoPlayer: Sendable {
     private var durationObserver: NSKeyValueObservation?
     private var bufferingObserver: NSKeyValueObservation?
     private var dismissControlPanelTask: Task<Void, Never>?
+    private var playlistReader: PlaylistReader?
     
     //MARK: Immutable variables
     /// The video player
@@ -126,6 +135,17 @@ public class VideoPlayer: Sendable {
         }
     }
     
+    /// Instruct the UI to toggle the visibility of resolutions options.
+    ///
+    /// This will only do something if resolution options are available.
+    public func toggleResolutionOptions() {
+        if resolutionOptions.count > 1 {
+            withAnimation {
+                shouldShowResolutionOptions.toggle()
+            }
+        }
+    }
+    
     /// Load the indicated stream (will stop playback).
     /// - Parameters:
     ///   - stream: The model describing the stream.
@@ -141,6 +161,65 @@ public class VideoPlayer: Sendable {
         player.replaceCurrentItem(with: playerItem)
         scrubState = .notScrubbing
         setupObservers()
+        
+        // if streaming from HLS, attempt to retrieve the resolution options
+        playlistReader = nil
+        resolutionOptions = []
+        if stream.url.host() != nil {
+            playlistReader = PlaylistReader(url: stream.url) { reader in
+                Task { @MainActor in
+                    if case .success = reader.state {
+                        self.resolutionOptions = reader.resolutions
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Load the corresponding stream variant from a resolution option, preserving other states.
+    /// - Parameters:
+    ///   - url: the url to the stream variant.
+    private func openStreamVariant(_ url: URL) {
+        guard let asset = player.currentItem?.asset as? AVURLAsset else {
+            // nothing is currently playing
+            return
+        }
+        
+        guard asset.url != url else {
+            // already playing the correct url
+            return
+        }
+        
+        withAnimation {
+            shouldShowResolutionOptions = false
+        }
+        
+        // temporarily stop the observers to stop them from interfering in the state changes
+        tearDownObservers()
+        let playerItem = AVPlayerItem(url: url)
+        player.replaceCurrentItem(with: playerItem)
+        // "simulating" a scrub end will seek the current time to the right spot
+        scrubState = .scrubEnded
+        setupObservers()
+        if !paused {
+            play()
+        }
+    }
+    
+    /// Load the resolution option for the given index, and open the corresponding url if successful.
+    /// - Parameters:
+    ///   - index: the index of the resolution option, -1 for adaptive bitrate (default)
+    public func openResolutionOption(index: Int = -1) {
+        guard let playlistReader,
+              index < resolutionOptions.count
+        else {
+            return
+        }
+        
+        // index -1 is automatic, that is to say the original URL parsed by the playlist reader
+        let selectedUrl = index < 0 ? playlistReader.url : resolutionOptions[index].url
+        
+        openStreamVariant(selectedUrl)
     }
     
     /// Play or unpause media playback.
