@@ -199,6 +199,7 @@ fileprivate struct PlaybackButtons: View {
 /// Allows users to set the video to a specific time, while otherwise reflecting the current position in playback.
 fileprivate struct Scrubber: View {
     @Binding var videoPlayer: VideoPlayer
+    let config = Config.shared
     
     var body: some View {
         Slider(value: $videoPlayer.currentTime, in: 0...videoPlayer.duration) { scrubbing in
@@ -209,7 +210,7 @@ fileprivate struct Scrubber: View {
             }
         }
         .controlSize(.extraLarge)
-        .tint(.orange.opacity(0.7))
+        .tint(config.scrubberTint)
         .background(Color.white.opacity(0.5), in: .capsule)
         .padding()
     }
