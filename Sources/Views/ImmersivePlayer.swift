@@ -14,6 +14,10 @@ public struct ImmersivePlayer: View {
     /// The singleton video player control interface.
     @State var videoPlayer: VideoPlayer = VideoPlayer()
     
+    /// The object managing the sphere or half-sphere displaying the video.
+    // This needs to be a @State otherwise the video doesn't load.
+    @State private(set) var videoScreen = VideoScreen()
+    
     /// The stream for which the player was open.
     ///
     /// The current implementation assumes only one media per appearance of the ImmersivePlayer.
@@ -47,9 +51,8 @@ public struct ImmersivePlayer: View {
                 root.position = headPosition
             }
             
-            // Setup video half sphere entity
-            let videoScreen = await makeVideoScreen()
-            root.addChild(videoScreen)
+            // Setup video sphere/half sphere entity
+            root.addChild(videoScreen.entity)
             
             // Setup ControlPanel as a floating window within the immersive scene
             if let controlPanel = attachments.entity(for: "ControlPanel") {
@@ -90,6 +93,8 @@ public struct ImmersivePlayer: View {
             videoPlayer.openStream(selectedStream)
             videoPlayer.showControlPanel()
             videoPlayer.play()
+            
+            videoScreen.attachVideoPlayer(videoPlayer)
         }
         .onDisappear {
             videoPlayer.stop()
@@ -114,21 +119,6 @@ public struct ImmersivePlayer: View {
         let entity = Entity()
         entity.name = "Root"
         entity.position = [0.0, 1.2, 0.0] // Origin would be the floor.
-        return entity
-    }
-    
-    /// Programmatically generates the half-sphere entity with a VideoMaterial onto which the video will be projected.
-    /// - Returns: a new video screen entity. 
-    private func makeVideoScreen() async -> some ModelEntity {
-        let (mesh, transform) = await VideoTools.makeVideoMesh()
-        let entity = ModelEntity()
-        entity.name = "VideoScreen"
-        entity.model = ModelComponent(
-            mesh: mesh,
-            materials: [VideoMaterial(avPlayer: videoPlayer.player)]
-        )
-        entity.transform = transform
-        
         return entity
     }
     

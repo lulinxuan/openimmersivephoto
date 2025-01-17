@@ -95,7 +95,7 @@ fileprivate struct MediaInfo: View {
                     Text("\(videoPlayer.bitrate/1_000_000, specifier: "%.1f") Mbps")
                         .frame(width: 120)
                         .monospacedDigit()
-                        .foregroundStyle(color(for: videoPlayer.bitrate).opacity(0.8))
+                        .foregroundStyle(color(for: videoPlayer.bitrate, ladder: videoPlayer.resolutionOptions).opacity(0.8))
                 }
             }
             
@@ -111,14 +111,16 @@ fileprivate struct MediaInfo: View {
     
     /// Evaluates the font color for the bitrate label depending on bitrate value.
     /// - Parameters:
-    ///   - bitrate: the bitrate value as a `Double`
-    /// - Returns: White if above 50Mbps, yellow if above 25Mbps, orange if above 10Mbps, red otherwise.
-    private func color(for bitrate: Double) -> Color {
-        if bitrate < 10_000_000 {
+    ///   - bitrate: the bitrate value as an `Double`
+    ///   - ladder: the resolution options for the stream
+    ///   - tolerance: the tolerance for color threshold (default 1.2Mbps)
+    /// - Returns: White if top bitrate for the stream, yellow if second best, orange if third best, red otherwise.
+    private func color(for bitrate: Double, ladder options: [ResolutionOption], tolerance: Int = 1_200_000) -> Color {
+        if options.count > 3 && bitrate < Double(options[2].bitrate - tolerance) {
             .red
-        } else if bitrate < 25_000_000 {
+        } else if options.count > 2 && bitrate < Double(options[1].bitrate - tolerance) {
             .orange
-        } else if bitrate < 50_000_000 {
+        } else if options.count > 1 && bitrate < Double(options[0].bitrate - tolerance) {
             .yellow
         } else {
             .white
