@@ -59,10 +59,12 @@ fileprivate struct MediaInfo: View {
     @Binding var videoPlayer: VideoPlayer
     
     var body: some View {
+        let config = Config.shared
+        
         HStack {
-            let hasResolutionOptions = videoPlayer.resolutionOptions.count > 1
+            let hasResolutionOptions = videoPlayer.resolutionOptions.count > 1  && config.controlPanelShowResolutionOptions
             let showingResolutionOptions = hasResolutionOptions && videoPlayer.shouldShowResolutionOptions
-            let showingBitrate = videoPlayer.bitrate > 0 && !showingResolutionOptions
+            let showingBitrate = videoPlayer.bitrate > 0 && !showingResolutionOptions && config.controlPanelShowBitrate
             
             if !showingResolutionOptions {
                 // extra padding to keep the stack centered when the bitrate is visible
@@ -212,7 +214,7 @@ fileprivate struct Scrubber: View {
             }
         }
         .controlSize(.extraLarge)
-        .tint(config.scrubberTint)
+        .tint(config.controlPanelScrubberTint)
         .background(Color.white.opacity(0.5), in: .capsule)
         .padding()
     }

@@ -10,8 +10,18 @@ import SwiftUI
 
 /// Fetches custom values in the application's openimmersive.plist
 public class Config {
+    /// Vertical offset of the control panel in meters (Number): + is up, - is down.
+    public var controlPanelVerticalOffset: Float = -0.5
+    /// Horizontal offset of the control panel in meters (Number): + is forward, - is backward.
+    public var controlPanelHorizontalOffset: Float = 0.7
+    /// Tilt of the control panel in degrees (Number): + is tilted up, - is tilted down.
+    public var controlPanelTilt: Float = 12.0
+    /// Show or hide the control panel's bitrate readout for streams (Boolean)
+    public var controlPanelShowBitrate: Bool = true
+    /// Show or hide the control panel's resolution selector for streams (Boolean)
+    public var controlPanelShowResolutionOptions: Bool = true
     /// Tint for the scrubber (String): RGB or RGBA color in hexadecimal in the #RRGGBB or #RRGGBBAA format.
-    public var scrubberTint: Color = .orange.opacity(0.7)
+    public var controlPanelScrubberTint: Color = .orange.opacity(0.7)
     
     /// Shared config object with values that can be overridden by the app.
     @MainActor
@@ -30,9 +40,29 @@ public class Config {
             return
         }
         
-        if let scrubberTintValue = config["scrubberTint"] as? String,
-           let color = color(from: scrubberTintValue) {
-            scrubberTint = color
+        if let controlPanelVerticalOffsetValue = config["controlPanelVerticalOffset"] as? Float {
+            controlPanelVerticalOffset = controlPanelVerticalOffsetValue
+        }
+        
+        if let controlPanelHorizontalOffsetValue = config["controlPanelHorizontalOffset"] as? Float {
+            controlPanelHorizontalOffset = controlPanelHorizontalOffsetValue
+        }
+        
+        if let controlPanelTiltValue = config["controlPanelTilt"] as? Float {
+            controlPanelTilt = controlPanelTiltValue
+        }
+        
+        if let controlPanelShowBitrateValue = config["controlPanelShowBitrate"] as? Bool {
+            controlPanelShowBitrate = controlPanelShowBitrateValue
+        }
+        
+        if let controlPanelShowResolutionOptionsValue = config["controlPanelShowResolutionOptions"] as? Bool {
+            controlPanelShowResolutionOptions = controlPanelShowResolutionOptionsValue
+        }
+        
+        if let controlPanelScrubberTintValue = config["controlPanelScrubberTint"] as? String,
+           let color = color(from: controlPanelScrubberTintValue) {
+            controlPanelScrubberTint = color
         }
         print("OpenImmersive loaded with custom configuration")
     }

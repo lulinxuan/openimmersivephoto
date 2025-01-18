@@ -40,6 +40,8 @@ public struct ImmersivePlayer: View {
     
     public var body: some View {
         RealityView { content, attachments in
+            let config = Config.shared
+            
             // Setup root entity that will remain static relatively to the head
             let root = makeRootEntity()
             content.add(root)
@@ -57,9 +59,8 @@ public struct ImmersivePlayer: View {
             // Setup ControlPanel as a floating window within the immersive scene
             if let controlPanel = attachments.entity(for: "ControlPanel") {
                 controlPanel.name = "ControlPanel"
-                controlPanel.position = [0, -0.5, -0.7]
-                let tilt: Float = -12.0 // degrees
-                controlPanel.orientation = simd_quatf(angle: tilt * .pi/180, axis: [1, 0, 0])
+                controlPanel.position = [0, config.controlPanelVerticalOffset, -config.controlPanelHorizontalOffset]
+                controlPanel.orientation = simd_quatf(angle: -config.controlPanelTilt * .pi/180, axis: [1, 0, 0])
                 root.addChild(controlPanel)
             }
             
