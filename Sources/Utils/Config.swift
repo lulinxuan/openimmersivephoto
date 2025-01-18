@@ -22,6 +22,8 @@ public class Config {
     public var controlPanelShowResolutionOptions: Bool = true
     /// Tint for the scrubber (String): RGB or RGBA color in hexadecimal in the #RRGGBB or #RRGGBBAA format.
     public var controlPanelScrubberTint: Color = .orange.opacity(0.7)
+    /// Radius of the video screen's sphere in meters (Number): make sure it's large enough to fit the control panel.
+    public var videoScreenSphereRadius: Float = 2.0
     
     /// Shared config object with values that can be overridden by the app.
     @MainActor
@@ -64,6 +66,11 @@ public class Config {
            let color = color(from: controlPanelScrubberTintValue) {
             controlPanelScrubberTint = color
         }
+        
+        if let videoScreenSphereRadiusValue = config["videoScreenSphereRadius"] as? Float {
+            videoScreenSphereRadius = videoScreenSphereRadiusValue
+        }
+        
         print("OpenImmersive loaded with custom configuration")
     }
     

@@ -10,8 +10,7 @@ import Observation
 
 /// Manages the sphere or half-sphere `Entity` onto which the video is projected.
 @MainActor
-@Observable
-public class VideoScreen: Sendable {
+public class VideoScreen {
     /// The `ModelEntity` containing the sphere or half-sphere onto which the video is projected.
     public let entity: ModelEntity = ModelEntity()
     
@@ -27,6 +26,7 @@ public class VideoScreen: Sendable {
             withObservationTracking {
                 _ = videoPlayer.horizontalFieldOfView
                 _ = videoPlayer.verticalFieldOfView
+                _ = videoPlayer.player
             } onChange: {
                 Task { @MainActor in
                     await self.updateMesh(videoPlayer)
@@ -46,7 +46,7 @@ public class VideoScreen: Sendable {
         entity.name = "VideoScreen"
         entity.model = ModelComponent(
             mesh: mesh,
-            materials: [VideoMaterial(avPlayer: videoPlayer.player)]
+            materials: [videoPlayer.videoMaterial]
         )
         entity.transform = transform
     }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import RealityFoundation
 
 /// Video Player Controller interfacing the underlying `AVPlayer`, exposing states and controls to the UI.
 // @MainActor ensures properties are published on the main thread
@@ -100,6 +101,7 @@ public class VideoPlayer: Sendable {
     //MARK: Immutable variables
     /// The video player
     public let player = AVPlayer()
+    public let videoMaterial: VideoMaterial
     
     //MARK: Public methods
     /// Public initializer for visibility.
@@ -121,6 +123,8 @@ public class VideoPlayer: Sendable {
         self.durationObserver = durationObserver
         self.bufferingObserver = bufferingObserver
         self.dismissControlPanelTask = dismissControlPanelTask
+        
+        self.videoMaterial = VideoMaterial(avPlayer: player)
     }
     
     /// Instruct the UI to reveal the control panel.

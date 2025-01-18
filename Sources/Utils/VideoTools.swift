@@ -117,13 +117,14 @@ public struct VideoTools {
     ///     - vFov: the vertical field of view in degrees (default 180.0).
     /// - Returns: A tuple containing the `MeshResource` and `Transform` for the video.
     public static func makeVideoMesh(hFov: Float = 180.0, vFov: Float = 180.0) async -> (mesh: MeshResource, transform: Transform) {
+        let config = Config.shared
         let horizontalFov = min(360.0, max(0.0, hFov))
         let verticalFov = min(180.0, max(0.0, vFov))
         let horizontalSlices = max(1, Int(horizontalFov / 3))
         let verticalSlices = max(1, Int(verticalFov / 3))
         
         let mesh = VideoTools.generateVideoSphere(
-            radius: 10000.0,
+            radius: config.videoScreenSphereRadius,
             sourceHorizontalFov: horizontalFov,
             sourceVerticalFov: verticalFov,
             clipHorizontalFov: horizontalFov,
