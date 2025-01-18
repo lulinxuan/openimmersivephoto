@@ -59,10 +59,12 @@ fileprivate struct MediaInfo: View {
     @Binding var videoPlayer: VideoPlayer
     
     var body: some View {
+        let config = Config.shared
+        
         HStack {
-            let hasResolutionOptions = videoPlayer.resolutionOptions.count > 1
+            let hasResolutionOptions = videoPlayer.resolutionOptions.count > 1  && config.controlPanelShowResolutionOptions
             let showingResolutionOptions = hasResolutionOptions && videoPlayer.shouldShowResolutionOptions
-            let showingBitrate = videoPlayer.bitrate > 0 && !showingResolutionOptions
+            let showingBitrate = videoPlayer.bitrate > 0 && !showingResolutionOptions && config.controlPanelShowBitrate
             
             if !showingResolutionOptions {
                 // extra padding to keep the stack centered when the bitrate is visible
@@ -95,7 +97,7 @@ fileprivate struct MediaInfo: View {
                     Text("\(videoPlayer.bitrate/1_000_000, specifier: "%.1f") Mbps")
                         .frame(width: 120)
                         .monospacedDigit()
-                        .foregroundStyle(color(for: videoPlayer.bitrate).opacity(0.8))
+                        .foregroundStyle(color(for: videoPlayer.bitrate, ladder: videoPlayer.resolutionOptions).opacity(0.8))
                 }
             }
             
@@ -111,14 +113,16 @@ fileprivate struct MediaInfo: View {
     
     /// Evaluates the font color for the bitrate label depending on bitrate value.
     /// - Parameters:
-    ///   - bitrate: the bitrate value as a `Double`
-    /// - Returns: White if above 50Mbps, yellow if above 25Mbps, orange if above 10Mbps, red otherwise.
-    private func color(for bitrate: Double) -> Color {
-        if bitrate < 10_000_000 {
+    ///   - bitrate: the bitrate value as an `Double`
+    ///   - ladder: the resolution options for the stream
+    ///   - tolerance: the tolerance for color threshold (default 1.2Mbps)
+    /// - Returns: White if top bitrate for the stream, yellow if second best, orange if third best, red otherwise.
+    private func color(for bitrate: Double, ladder options: [ResolutionOption], tolerance: Int = 1_200_000) -> Color {
+        if options.count > 3 && bitrate < Double(options[2].bitrate - tolerance) {
             .red
-        } else if bitrate < 25_000_000 {
+        } else if options.count > 2 && bitrate < Double(options[1].bitrate - tolerance) {
             .orange
-        } else if bitrate < 50_000_000 {
+        } else if options.count > 1 && bitrate < Double(options[0].bitrate - tolerance) {
             .yellow
         } else {
             .white
@@ -199,6 +203,7 @@ fileprivate struct PlaybackButtons: View {
 /// Allows users to set the video to a specific time, while otherwise reflecting the current position in playback.
 fileprivate struct Scrubber: View {
     @Binding var videoPlayer: VideoPlayer
+    let config = Config.shared
     
     var body: some View {
         Slider(value: $videoPlayer.currentTime, in: 0...videoPlayer.duration) { scrubbing in
@@ -209,7 +214,7 @@ fileprivate struct Scrubber: View {
             }
         }
         .controlSize(.extraLarge)
-        .tint(.orange.opacity(0.7))
+        .tint(config.controlPanelScrubberTint)
         .background(Color.white.opacity(0.5), in: .capsule)
         .padding()
     }

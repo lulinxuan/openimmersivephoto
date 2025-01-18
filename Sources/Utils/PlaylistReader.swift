@@ -39,7 +39,7 @@ public actor PlaylistReader {
     @MainActor
     public var error: Error? {
         get {
-            switch (state) {
+            switch state {
             case .error(let error):
                 return error
             default:
@@ -97,7 +97,7 @@ public actor PlaylistReader {
         
         let resolutions = parseResolutions(from: text)
         
-        if (resolutions.isEmpty) {
+        if resolutions.isEmpty {
             throw PlaylistReaderError.NoAvailableResolutionError
         }
         
