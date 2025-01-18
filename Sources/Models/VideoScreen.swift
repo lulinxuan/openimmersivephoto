@@ -8,6 +8,7 @@
 import RealityKit
 import Observation
 
+/// Manages the sphere or half-sphere `Entity` onto which the video is projected.
 @MainActor
 @Observable
 public class VideoScreen: Sendable {
@@ -17,18 +18,18 @@ public class VideoScreen: Sendable {
     /// Public initializer for visibility.
     public init() {}
     
-    /// Attaches a VideoPlayer instance to the VideoScreen to resize it and start displaying its video media.
+    /// Updates the video screen mesh with values from a VideoPlayer instance to resize it and start displaying its video media.
     /// - Parameters:
-    ///   - videoPlayer:the VideoPlayer instance
-    public func attachVideoPlayer(_ videoPlayer: VideoPlayer) {
+    ///   - videoPlayer: the VideoPlayer instance
+    public func update(source videoPlayer: VideoPlayer) {
         Task {
-            await self.updateEntity(videoPlayer: videoPlayer)
+            await self.updateMesh(videoPlayer)
             withObservationTracking {
                 _ = videoPlayer.horizontalFieldOfView
                 _ = videoPlayer.verticalFieldOfView
             } onChange: {
                 Task { @MainActor in
-                    await self.updateEntity(videoPlayer: videoPlayer)
+                    await self.updateMesh(videoPlayer)
                 }
             }
         }
@@ -37,7 +38,7 @@ public class VideoScreen: Sendable {
     /// Programmatically generates the sphere or half-sphere entity with a VideoMaterial onto which the video will be projected.
     /// - Parameters:
     ///   - videoPlayer:the VideoPlayer instance
-    private func updateEntity(videoPlayer: VideoPlayer) async {
+    private func updateMesh(_ videoPlayer: VideoPlayer) async {
         let (mesh, transform) = await VideoTools.makeVideoMesh(
             hFov: videoPlayer.horizontalFieldOfView,
             vFov: videoPlayer.verticalFieldOfView

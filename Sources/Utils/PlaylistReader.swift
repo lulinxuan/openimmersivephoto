@@ -97,7 +97,7 @@ public actor PlaylistReader {
         
         let resolutions = parseResolutions(from: text)
         
-        if (resolutions.isEmpty) {
+        if resolutions.isEmpty {
             throw PlaylistReaderError.NoAvailableResolutionError
         }
         
