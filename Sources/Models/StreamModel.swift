@@ -17,6 +17,8 @@ public struct StreamModel: Codable {
     public var url: URL
     /// The fallback horizontal field of view angle of the video stream (if cannot be determined from the media).
     public var fallbackFieldOfView: Float
+    /// Setting this to a non-nil value will force the horizontal field of view angle of the stream to the corresponding value (overriding the value that's encoded in the media).
+    public var forceFieldOfView: Float?
     /// True if the media required user permission for access.
     public var isSecurityScoped: Bool
     
@@ -26,12 +28,14 @@ public struct StreamModel: Codable {
     ///   - details: a short description of the video stream.
     ///   - url: URL to a media, whether local or streamed from a server (m3u8).
     ///   - fallbackFieldOfView: the fallback horizontal field of view of the video, if cannot be determined from the media, in degrees (default 180.0).
+    ///   - forceFieldOfView: optional forced horizontal field of view of the video, if needed to override the value encoded in the media, in degrees (default nil).
     ///   - isSecurityScoped: true if the media required user permission for access (default false).
-    public init(title: String, details: String, url: URL, fallbackFieldOfView: Float = 180.0, isSecurityScoped: Bool = false) {
+    public init(title: String, details: String, url: URL, fallbackFieldOfView: Float = 180.0, forceFieldOfView: Float? = nil, isSecurityScoped: Bool = false) {
         self.title = title
         self.details = details
         self.url = url
         self.fallbackFieldOfView = fallbackFieldOfView
+        self.forceFieldOfView = forceFieldOfView
         self.isSecurityScoped = isSecurityScoped
     }
 }

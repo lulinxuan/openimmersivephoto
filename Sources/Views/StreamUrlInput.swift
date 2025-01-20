@@ -2,7 +2,7 @@
 //  StreamUrlInput.swift
 //  OpenImmersive
 //
-//  Created by Anthony Maës on 10/17/24.
+//  Created by Anthony Maës (Acute Immersive) on 10/17/24.
 //
 
 import SwiftUI
