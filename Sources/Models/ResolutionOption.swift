@@ -2,7 +2,7 @@
 //  ResolutionOption.swift
 //  OpenImmersive
 //
-//  Created by Anthony Maës on 11/16/24.
+//  Created by Anthony Maës (Acute Immersive) on 11/16/24.
 //
 
 import Foundation

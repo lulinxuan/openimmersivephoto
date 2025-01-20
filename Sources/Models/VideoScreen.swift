@@ -2,7 +2,7 @@
 //  VideoScreen.swift
 //  OpenImmersive
 //
-//  Created by Anthony Maës on 1/17/25.
+//  Created by Anthony Maës (Acute Immersive) on 1/17/25.
 //
 
 import RealityKit
@@ -26,6 +26,7 @@ public class VideoScreen {
             withObservationTracking {
                 _ = videoPlayer.horizontalFieldOfView
                 _ = videoPlayer.verticalFieldOfView
+                _ = videoPlayer.aspectRatio
                 _ = videoPlayer.player
             } onChange: {
                 Task { @MainActor in

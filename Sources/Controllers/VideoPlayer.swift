@@ -28,12 +28,16 @@ public class VideoPlayer: Sendable {
     private(set) var buffering: Bool = false
     /// `true` if playback reached the end of the video and is no longer playing.
     private(set) var hasReachedEnd: Bool = false
-    /// The detected resolution of the current media
-    private(set) var resolution: CGSize = CGSize(width: 1, height: 1)
+    /// The aspect ratio of the current media (width / height).
+    private(set) var aspectRatio: Float = 1.0
     /// The horizontal field of view for the current media
     private(set) var horizontalFieldOfView: Float = 180.0
     /// The vertical field of view for the current media
-    private(set) var verticalFieldOfView: Float = 180.0
+    public var verticalFieldOfView: Float {
+        get {
+            return max(0, min(180, self.horizontalFieldOfView / aspectRatio))
+        }
+    }
     /// The bitrate of the current video stream (0 if none).
     private(set) var bitrate: Double = 0
     /// Resolution options available for the video stream, only available if streaming from a HLS server (m3u8).
@@ -105,16 +109,15 @@ public class VideoPlayer: Sendable {
     
     //MARK: Public methods
     /// Public initializer for visibility.
-    public init(title: String = "", details: String = "", duration: Double = 0, paused: Bool = false, buffering: Bool = false, hasReachedEnd: Bool = false, resolution: CGSize? = nil, horizontalFieldOfView: Float? = nil, verticalFieldOfView: Float? = nil, bitrate: Double = 0, shouldShowControlPanel: Bool = true, currentTime: Double = 0, scrubState: VideoPlayer.ScrubState = .notScrubbing, timeObserver: Any? = nil, durationObserver: NSKeyValueObservation? = nil, bufferingObserver: NSKeyValueObservation? = nil, dismissControlPanelTask: Task<Void, Never>? = nil) {
+    public init(title: String = "", details: String = "", duration: Double = 0, paused: Bool = false, buffering: Bool = false, hasReachedEnd: Bool = false, aspectRatio: Float? = nil, horizontalFieldOfView: Float? = nil, bitrate: Double = 0, shouldShowControlPanel: Bool = true, currentTime: Double = 0, scrubState: VideoPlayer.ScrubState = .notScrubbing, timeObserver: Any? = nil, durationObserver: NSKeyValueObservation? = nil, bufferingObserver: NSKeyValueObservation? = nil, dismissControlPanelTask: Task<Void, Never>? = nil) {
         self.title = title
         self.details = details
         self.duration = duration
         self.paused = paused
         self.buffering = buffering
         self.hasReachedEnd = hasReachedEnd
-        if let resolution { self.resolution = resolution }
+        if let aspectRatio { self.aspectRatio = aspectRatio }
         if let horizontalFieldOfView { self.horizontalFieldOfView = horizontalFieldOfView }
-        if let verticalFieldOfView { self.verticalFieldOfView = verticalFieldOfView }
         self.bitrate = bitrate
         self.shouldShowControlPanel = shouldShowControlPanel
         self.currentTime = currentTime
@@ -176,19 +179,24 @@ public class VideoPlayer: Sendable {
         scrubState = .notScrubbing
         setupObservers()
         
-        // Detected resolution and field of view, if available
-        horizontalFieldOfView = max(0, min(360, stream.fallbackFieldOfView))
-        verticalFieldOfView = max(0, min(180, stream.fallbackFieldOfView))
-        Task { [self] in
-            guard let (resolution, horizontalFieldOfView) = await VideoTools.getVideoDimensions(asset: asset) else {
-                return
+        // Set the video format to the forced field of view as provided by the StreamModel object, if available
+        if let forceFieldOfView = stream.forceFieldOfView {
+            // Detect resolution and field of view, if available
+            horizontalFieldOfView = max(0, min(360, forceFieldOfView))
+        } else {
+            // Set the video format to the fallback field of view as provided by the StreamModel object,
+            // then detect resolution and field of view encoded in the media, if available
+            horizontalFieldOfView = max(0, min(360, stream.fallbackFieldOfView))
+            Task { [self] in
+                guard let (resolution, horizontalFieldOfView) =
+                        await VideoTools.getVideoDimensions(asset: asset) else {
+                    return
+                }
+                if let horizontalFieldOfView {
+                    self.horizontalFieldOfView = max(0, min(360, horizontalFieldOfView))
+                }
+                self.aspectRatio = Float(resolution.width / resolution.height)
             }
-            self.resolution = resolution
-            let aspectRatio = Float(resolution.width / resolution.height)
-            if let horizontalFieldOfView {
-                self.horizontalFieldOfView = max(0, min(360, horizontalFieldOfView))
-            }
-            self.verticalFieldOfView = max(0, min(180, self.horizontalFieldOfView / aspectRatio))
         }
         
         // if streaming from HLS, attempt to retrieve the resolution options
@@ -197,8 +205,11 @@ public class VideoPlayer: Sendable {
         if stream.url.host() != nil {
             playlistReader = PlaylistReader(url: stream.url) { reader in
                 Task { @MainActor in
-                    if case .success = reader.state {
+                    if case .success = reader.state,
+                       reader.resolutions.count > 0 {
                         self.resolutionOptions = reader.resolutions
+                        let defaultResolution = reader.resolutions.first!.size
+                        self.aspectRatio = Float(defaultResolution.width / defaultResolution.height)
                     }
                 }
             }

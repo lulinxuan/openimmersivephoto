@@ -2,7 +2,7 @@
 //  Config.swift
 //  OpenImmersive
 //
-//  Created by Anthony Maës on 1/16/25.
+//  Created by Anthony Maës (Acute Immersive) on 1/16/25.
 //
 
 import Foundation
