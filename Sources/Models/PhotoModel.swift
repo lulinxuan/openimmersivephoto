@@ -8,7 +8,7 @@
 import Foundation
 
 /// Simple structure describing a video stream.
-public struct StreamModel: Codable {
+public struct PhotoModel: Codable {
     /// The title of the video stream.
     public var title: String
     /// A short description of the video stream.
@@ -40,17 +40,17 @@ public struct StreamModel: Codable {
     }
 }
 
-extension StreamModel: Identifiable {
+extension PhotoModel: Identifiable {
     public var id: String { url.absoluteString }
 }
 
-extension StreamModel: Hashable {
+extension PhotoModel: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
 
-extension StreamModel: Equatable {
+extension PhotoModel: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }

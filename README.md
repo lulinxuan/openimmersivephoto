@@ -1,6 +1,6 @@
 # OpenImmersiveLib
 
-_A free and open source MV-HEVC spatial & immersive video player Swift Package for visionOS._
+_A free and open source MV-HEVC spatial & immersive photo player Swift Package for visionOS._
 
 Maintained by [Anthony Maës](https://www.linkedin.com/in/portemantho/) & [Acute Immersive](https://acuteimmersive.com/), derived from [Spatial Player](https://github.com/mikeswanson/SpatialPlayer/) by [Mike Swanson](https://blog.mikeswanson.com/).
 

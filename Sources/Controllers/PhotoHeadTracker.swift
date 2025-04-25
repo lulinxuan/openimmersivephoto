@@ -11,7 +11,7 @@ import SwiftUI
 
 /// Provides a convenience interface to obtain head pose transforms and subscribing a closure to handle pose update events.
 @MainActor
-public class HeadTracker {
+public class PhotoHeadTracker {
     public enum State {
         /// Head tracking is stopped.
         case stopped

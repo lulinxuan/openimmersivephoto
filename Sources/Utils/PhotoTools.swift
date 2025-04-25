@@ -9,7 +9,7 @@ import RealityKit
 @preconcurrency import AVFoundation
 
 @MainActor
-public struct VideoTools {
+public struct PhotoTools {
     /// Generates a sphere mesh suitable for mapping an equirectangular video source.
     /// - Parameters:
     ///   - radius: The radius of the sphere.
@@ -117,13 +117,13 @@ public struct VideoTools {
     ///     - vFov: the vertical field of view in degrees (default 180.0).
     /// - Returns: A tuple containing the `MeshResource` and `Transform` for the video.
     public static func makeVideoMesh(hFov: Float = 180.0, vFov: Float = 180.0) async -> (mesh: MeshResource, transform: Transform) {
-        let config = Config.shared
+        let config = PhotoConfig.shared
         let horizontalFov = min(360.0, max(0.0, hFov))
         let verticalFov = min(180.0, max(0.0, vFov))
         let horizontalSlices = max(1, Int(horizontalFov / 3))
         let verticalSlices = max(1, Int(verticalFov / 3))
         
-        let mesh = VideoTools.generateVideoSphere(
+        let mesh = PhotoTools.generateVideoSphere(
             radius: config.videoScreenSphereRadius,
             sourceHorizontalFov: horizontalFov,
             sourceVerticalFov: verticalFov,
@@ -138,37 +138,5 @@ public struct VideoTools {
             translation: .init(x: 0, y: 0, z: 0))
         
         return (mesh: mesh!, transform: transform)
-    }
-    
-    /// Retrieves video resolution & field of view information from an `AVAsset`.
-    /// - Parameters:
-    ///   - asset: The `AVAsset` instance to extract video information from.
-    /// - Returns: An optional tuple with the the video resolution, and, if the video is MV-HEVC, the horizontal field of view; nil if the video lacks the information.
-    public static func getVideoDimensions(asset: AVAsset) async -> (CGSize, Float?)? {
-        guard let tracks = try? await asset.load(.tracks),
-              let videoTrack = tracks.first(where: { $0.mediaType == .video }) else {
-            print("Could not extract video dimensions: No video track found")
-            return nil
-        }
-        
-        guard let (naturalSize, formatDescriptions) = try? await videoTrack.load(.naturalSize, .formatDescriptions)
-        else {
-            print("Could not extract video dimensions: Failed to load video properties")
-            return nil
-        }
-        
-        guard let formatDescription = formatDescriptions.first else {
-            print("Could extract video resolution but not format description")
-            return (naturalSize, nil)
-        }
-        
-        guard let extensions = CMFormatDescriptionGetExtensions(formatDescription) as Dictionary?,
-              let rawHorizontalFieldOfView = extensions[kCMFormatDescriptionExtension_HorizontalFieldOfView] as? UInt32 else {
-            print("Could extract video resolution but not field of view: No extensions found in format description.")
-            return (naturalSize, nil)
-        }
-        
-        let horizontalFieldOfView = Float(rawHorizontalFieldOfView) / 1000.0
-        return (naturalSize, horizontalFieldOfView)
     }
 }

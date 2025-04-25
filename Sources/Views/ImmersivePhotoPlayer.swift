@@ -10,37 +10,37 @@ import RealityKit
 import AVFoundation
 
 /// An immersive video player, complete with UI controls
-public struct ImmersivePlayer: View {
+public struct ImmersivePhotoPlayer: View {
     /// The singleton video player control interface.
-    @State var videoPlayer: VideoPlayer = VideoPlayer()
+    @State var photoPlayer: PhotoPlayer = PhotoPlayer()
     
     /// The object managing the sphere or half-sphere displaying the video.
     // This needs to be a @State otherwise the video doesn't load.
-    @State private(set) var videoScreen = VideoScreen()
+    @State private(set) var photoScreen = PhotoScreen()
     
     /// The stream for which the player was open.
     ///
     /// The current implementation assumes only one media per appearance of the ImmersivePlayer.
-    let selectedStream: StreamModel
+    let selectedStream: PhotoModel
     
     /// The callback to execute when the user closes the immersive player.
     let closeAction: (() -> Void)?
     
     /// The pose tracker ensuring the position of the control panel attachment is fixed relatively to the viewer.
-    private let headTracker = HeadTracker()
+    private let headTracker = PhotoHeadTracker()
     
     /// Public initializer for visibility.
     /// - Parameters:
     ///   - selectedStream: the stream for which the player will be open.
     ///   - closeAction: the callback to execute when the user closes the immersive player.
-    public init(selectedStream: StreamModel, closeAction: (() -> Void)? = nil) {
+    public init(selectedStream: PhotoModel, closeAction: (() -> Void)? = nil) {
         self.selectedStream = selectedStream
         self.closeAction = closeAction
     }
     
     public var body: some View {
         RealityView { content, attachments in
-            let config = Config.shared
+            let config = PhotoConfig.shared
             
             // Setup root entity that will remain static relatively to the head
             let root = makeRootEntity()
@@ -54,7 +54,7 @@ public struct ImmersivePlayer: View {
             }
             
             // Setup video sphere/half sphere entity
-            root.addChild(videoScreen.entity)
+            root.addChild(photoScreen.entity)
             
             // Setup ControlPanel as a floating window within the immersive scene
             if let controlPanel = attachments.entity(for: "ControlPanel") {
@@ -76,14 +76,14 @@ public struct ImmersivePlayer: View {
             root.addChild(tapCatcher)
         } update: { content, attachments in
             if let progressView = attachments.entity(for: "ProgressView") {
-                progressView.isEnabled = videoPlayer.buffering
+                progressView.isEnabled = photoPlayer.hasLoaded
             }
         } placeholder: {
             ProgressView()
         } attachments: {
             Attachment(id: "ControlPanel") {
-                ControlPanel(videoPlayer: $videoPlayer, closeAction: closeAction)
-                    .animation(.easeInOut(duration: 0.3), value: videoPlayer.shouldShowControlPanel)
+                PhotoControlPanel(videoPlayer: $photoPlayer, closeAction: closeAction)
+                    .animation(.easeInOut(duration: 0.3), value: photoPlayer.shouldShowControlPanel)
             }
             
             Attachment(id: "ProgressView") {
@@ -91,15 +91,13 @@ public struct ImmersivePlayer: View {
             }
         }
         .onAppear {
-            videoPlayer.openStream(selectedStream)
-            videoPlayer.showControlPanel()
-            videoPlayer.play()
+            photoPlayer.openStream(selectedStream)
+            photoPlayer.showControlPanel()
             
-            videoScreen.update(source: videoPlayer)
+            photoScreen.update(source: photoPlayer)
         }
         .onDisappear {
-            videoPlayer.stop()
-            videoPlayer.hideControlPanel()
+            photoPlayer.hideControlPanel()
             headTracker.stop()
             if selectedStream.isSecurityScoped {
                 selectedStream.url.stopAccessingSecurityScopedResource()
@@ -108,7 +106,7 @@ public struct ImmersivePlayer: View {
         .gesture(TapGesture()
             .targetedToAnyEntity()
             .onEnded { event in
-                videoPlayer.toggleControlPanel()
+                photoPlayer.toggleControlPanel()
             }
         )
     }
