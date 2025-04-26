@@ -84,11 +84,6 @@ public class PhotoPlayer: Sendable {
     /// - Parameters:
     ///   - stream: The model describing the stream.
     public func openStream(_ stream: PhotoModel) {
-        title = stream.title
-        details = stream.details
-        
-        self.applyPhotoMaterial(from: stream.url)
-                
         // Set the video format to the forced field of view as provided by the StreamModel object, if available
         if let forceFieldOfView = stream.forceFieldOfView {
             // Detect resolution and field of view, if available
@@ -98,6 +93,15 @@ public class PhotoPlayer: Sendable {
             // then detect resolution and field of view encoded in the media, if available
             horizontalFieldOfView = max(0, min(360, stream.fallbackFieldOfView))
         }
+        
+        title = stream.title
+        details = stream.details
+        
+        if stream.isSecurityScoped {
+            let _ = stream.url.startAccessingSecurityScopedResource()
+        }
+        
+        self.applyPhotoMaterial(from: stream.url)
     }
     
     func applyPhotoMaterial(from url: URL) {
